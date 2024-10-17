@@ -883,7 +883,7 @@ function ConfigDialog:init()
             }
         }
     }
-    self.ges_events.SwipeCloseMenu = {
+    self.ges_events.SwipeMenu = {
         GestureRange:new{
             ges = "swipe",
             range = Geom:new{
@@ -1493,7 +1493,7 @@ function ConfigDialog:onTapCloseMenu(arg, ges_ev)
     end
 end
 
-function ConfigDialog:onSwipeCloseMenu(arg, ges_ev)
+function ConfigDialog:onSwipeMenu(arg, ges_ev)
     local DTAP_ZONE_CONFIG = G_defaults:readSetting("DTAP_ZONE_CONFIG")
     local range = Geom:new{
         x = DTAP_ZONE_CONFIG.x * Screen:getWidth(),
@@ -1508,8 +1508,33 @@ function ConfigDialog:onSwipeCloseMenu(arg, ges_ev)
         w = DTAP_ZONE_CONFIG_EXT.w * Screen:getWidth(),
         h = DTAP_ZONE_CONFIG_EXT.h * Screen:getHeight(),
     }
-    if ges_ev.direction == "south" and (ges_ev.pos:intersectWith(self.dialog_frame.dimen)
+
+    local intersects = false
+    local config_options = self.config_options
+    local next_option
+
+    if (ges_ev.pos:intersectWith(self.dialog_frame.dimen)
         or ges_ev.pos:intersectWith(range) or ges_ev.pos:intersectWith(range_ext)) then
+        intersects = true
+    end
+
+    if ges_ev.direction == "east" and intersects then
+        if self.panel_index == 1 then
+            next_option = #config_options
+        else
+            next_option = self.panel_index - 1
+        end
+        self:onShowConfigPanel(next_option)
+        return true
+    elseif ges_ev.direction == "west" and intersects then
+        if self.panel_index == #config_options then
+            next_option = 1
+        else
+            next_option = self.panel_index + 1
+        end
+        self:onShowConfigPanel(next_option)
+        return true
+    elseif ges_ev.direction == "south" and intersects then
         self:closeDialog()
         return true
     end
